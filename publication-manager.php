@@ -63,7 +63,8 @@ class BookPlugin
         add_menu_page('Book', 'Book', 'manage_options', 'book-plugin', array($this, 'book_menu_callback'));
 
         // Add submenu for listing all books
-        add_submenu_page('book-plugin', 'All Books', 'All Books', 'manage_options', 'book-list', array($this, 'list_all_books'));
+        // it can be used for future expansion
+        // add_submenu_page('book-plugin', 'All Books', 'All Books', 'manage_options', 'book-list', array($this, 'list_all_books'));
 
         // Add submenu for adding new book
         add_submenu_page('book-plugin', 'Add New Book', 'Add New Book', 'manage_options', 'add-new-book', array($this, 'add_new_book'));
@@ -182,102 +183,103 @@ class BookPlugin
     ob_start();
     ?>
 
-
-<style>
-    .card {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-    .card-body {
-        flex: 1;
-    }
-    .card-footer {
-        margin-top: auto; /* Pushes the footer to the bottom */
-    }
-    .card-title,
-    .card-text,
-    .card-footer button,
-    .modal-body p {
-        font-size: 16px; /* Adjust font size for responsiveness */
-    }
-    @media (max-width: 576px) {
-        .card-text {
-            max-height: 3em; /* Adjust max-height for small screens */
-        }
-        .card-footer button {
-            font-size: 14px; /* Adjust font size for small screens */
-        }
-    }
-</style>
-
-<div class="container">
-    <div class="row">
+<div class="grid-container">
         <?php foreach ($books as $book) : ?>
-            <div class="col-lg-2 col-md-4 col-sm-6 mb-3"> <!-- Adjusted grid classes for responsiveness -->
-                <div class="card">
-                    <img class="card-img-top img-fluid" src="<?php echo $book->image_url; ?>" alt="<?php echo $book->title; ?>">
-                    <div class="card-body">
-                        <h5 style="font-weight: 900; color: #34dfd4;" class="card-title"><?php echo $book->title; ?></h5>
-                        <p class="card-text" style="margin:0;padding:0">By <?php echo $book->author; ?></p>
-                        
-                        <p class="card-text" style="max-height: calc(6*1.5em); overflow: hidden; text-overflow: ellipsis; white-space: pre-line; line-height: 1.5em; margin:0;padding:0">
-                             <?php echo mb_strimwidth($book->description, 0, 150, '...'); ?>
-                        </p>
-                        
+            <div class="grid-item">
+                <img src="<?php echo $book->image_url; ?>" alt="Book Cover" />
+                <h3><?php echo $book->title; ?></h3>
+                <p><span>By <?php echo $book->author; ?></span> </p>
+                <p class="description">
+                    <?php echo $book->description; ?>
+                </p>
+            
+                    <button class="more-btn">More</button>
+                    <div class="dropdown">
+                    <button class="buy-btn">Buy</button>
+                    <div class="dropdown-content">
+                        <a href="<?php echo $book->ebook_link; ?>">eBook</a>
+                        <a href="<?php echo $book->audio_link; ?>">AudioBook</a>
+                        <a href="<?php echo $book->paperback_link; ?>">Paper Back</a>
                     </div>
-                    <div class="card-footer">
-                        <button class="btn btn-primary btn-block view-details" data-toggle="modal" data-target="#book-modal" data-description="<?php echo $book->description; ?>" data-about-author="<?php echo $book->about_author; ?>">More</button>
-                        <div class="buy-options mt-2">
-                            <select class="form-control buy-option" data-ebook="<?php echo $book->ebook_link; ?>" data-audio="<?php echo $book->audio_link; ?>" data-paperback="<?php echo $book->paperback_link; ?>">
-                                <option value="">Buy</option>
-                                <option value="ebook">eBook</option>
-                                <option value="audio">Audio Book</option>
-                                <option value="paperback">Paperback</option>
-                            </select>
-                        </div>
                     </div>
-                </div>
+                
             </div>
         <?php endforeach; ?>
-    </div>
+      <!-- Add more grid items as needed -->
 </div>
 
-<!-- Modal for displaying book details -->
-<div style="display:flex;justify-content:center;align-items:center" >
-    <div class="modal fade" id="book-modal" tabindex="-1" role="dialog" aria-labelledby="book-modal-label" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="book-modal-label"></h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p class="description"></p>
-                    <hr>
-                    <p class="about-author"></p>
-                </div>
-            </div>
-        </div>
-    </div>
+<div id="myModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2><?php echo $book->title; ?></h2>
+        <span class="about-author">About Author</span>
+        <p class="about-author-text" ><?php echo $book->about_author; ?></p>
+        <span class="about-book" >Description</span>
+        <p class="full-description">
+        <?php echo $book->description; ?>
+        </p>
+      </div>
 </div>
-
-    
 
     <script>
-        // JavaScript/jQuery for modal popup
-        jQuery(document).ready(function ($) {
-            $('.view-details').click(function () {
-                var title = $(this).siblings('.card-title').text();
-                var description = $(this).data('description');
-                var aboutAuthor = $(this).data('about-author');
-                $('.modal-title').text(title);
-                $('.description').text('Description: ' + description);
-                $('.about-author').text('About Author: ' + aboutAuthor);
-            });
-        });
+
+document.querySelectorAll(".more-btn").forEach(function(btn, index) {
+    btn.addEventListener("click", function() {
+        var modal = document.getElementById("myModal");
+        var span = modal.querySelector(".close");
+
+        // Get book details associated with the clicked button
+        var book = <?php echo json_encode($books); ?>[index];
+
+        // Populate modal content with book details
+        modal.querySelector("h2").textContent = book.title;
+        modal.querySelector("p").textContent = book.about_author;
+        modal.querySelector(".full-description").textContent = book.description;
+
+        modal.style.display = "block";
+
+        span.onclick = function() {
+            modal.style.display = "none";
+        };
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+    });
+});
+
+
+
+
+
+    //   document.querySelectorAll(".more-btn").forEach(function (btn) {
+    //     btn.addEventListener("click", function () {
+    //       var modal = document.getElementById("myModal");
+    //       var span = modal.querySelector(".close");
+
+    //       modal.style.display = "block";
+
+    //       span.onclick = function () {
+    //         modal.style.display = "none";
+    //       };
+
+    //       window.onclick = function (event) {
+    //         if (event.target == modal) {
+    //           modal.style.display = "none";
+    //         }
+    //       };
+    //     });
+    //   });
+
+      // Truncate description with ellipsis
+      var descriptionElements = document.querySelectorAll(".description");
+      descriptionElements.forEach(function (element) {
+        var truncatedText =
+          element.textContent.trim().substring(0, 100).trim() + "...";
+        element.textContent = truncatedText;
+      });
     </script>
     <?php
     return ob_get_clean();
@@ -289,7 +291,10 @@ class BookPlugin
 
         wp_enqueue_script('book-plugin-script', plugin_dir_url(__FILE__) . 'script.js', array('jquery'), null, true);
         wp_localize_script('book-plugin-script', 'book_plugin_ajax', array('ajax_url' => admin_url('admin-ajax.php')));
+        wp_enqueue_style('book-plugin-custom-style', plugin_dir_url(__FILE__) . 'style.css');
     }
+
+    
 
     // Enqueue Bootstrap CSS and JavaScript
     public function enqueue_bootstrap()
