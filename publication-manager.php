@@ -3,7 +3,7 @@
  * Plugin Name: Publication Plugin
  * Description: A plugin to manage books in WordPress.
  * Version: 1.0.0
- * Author: Iqbal Mahamud
+ * Author: Amimul Ahsan
  * Text Domain: Publication Plugin
  */
 
