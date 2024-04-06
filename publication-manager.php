@@ -183,33 +183,48 @@ class BookPlugin
     ?>
 
 
-    <style>
-        .card {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
+<style>
+    .card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .card-body {
+        flex: 1;
+    }
+    .card-footer {
+        margin-top: auto; /* Pushes the footer to the bottom */
+    }
+    .card-title,
+    .card-text,
+    .card-footer button,
+    .modal-body p {
+        font-size: 16px; /* Adjust font size for responsiveness */
+    }
+    @media (max-width: 576px) {
+        .card-text {
+            max-height: 3em; /* Adjust max-height for small screens */
         }
-        .card-body {
-            flex: 1;
+        .card-footer button {
+            font-size: 14px; /* Adjust font size for small screens */
         }
-        .card-footer {
-            margin-top: auto; /* Pushes the footer to the bottom */
-        }
-    </style>
+    }
+</style>
 
 <div class="container">
     <div class="row">
         <?php foreach ($books as $book) : ?>
-            <div class="col-md-6 mb-3">
+            <div class="col-lg-2 col-md-4 col-sm-6 mb-3"> <!-- Adjusted grid classes for responsiveness -->
                 <div class="card">
                     <img class="card-img-top img-fluid" src="<?php echo $book->image_url; ?>" alt="<?php echo $book->title; ?>">
                     <div class="card-body">
                         <h5 style="font-weight: 900; color: #34dfd4;" class="card-title"><?php echo $book->title; ?></h5>
                         <p class="card-text" style="margin:0;padding:0">By <?php echo $book->author; ?></p>
                         
-                        <p class="card-text" style="max-height: calc(3*4.5em); overflow: hidden; text-overflow: ellipsis; white-space: pre-line; line-height: 1.5em; margin:0;padding:0">
-                             <?php echo mb_strimwidth($book->description, 0, 150, '.....'); ?>
+                        <p class="card-text" style="max-height: calc(6*1.5em); overflow: hidden; text-overflow: ellipsis; white-space: pre-line; line-height: 1.5em; margin:0;padding:0">
+                             <?php echo mb_strimwidth($book->description, 0, 150, '...'); ?>
                         </p>
+                        
                     </div>
                     <div class="card-footer">
                         <button class="btn btn-primary btn-block view-details" data-toggle="modal" data-target="#book-modal" data-description="<?php echo $book->description; ?>" data-about-author="<?php echo $book->about_author; ?>">More</button>
@@ -228,28 +243,27 @@ class BookPlugin
     </div>
 </div>
 
-
-
-    <!-- Modal for displaying book details -->
-    <div style="display:flex;justify-content:center;align-items:center" >
-        <div class="modal fade" id="book-modal" tabindex="-1" role="dialog" aria-labelledby="book-modal-label" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="book-modal-label"></h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="description"></p>
-                        <hr>
-                        <p class="about-author"></p>
-                    </div>
+<!-- Modal for displaying book details -->
+<div style="display:flex;justify-content:center;align-items:center" >
+    <div class="modal fade" id="book-modal" tabindex="-1" role="dialog" aria-labelledby="book-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="book-modal-label"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="description"></p>
+                    <hr>
+                    <p class="about-author"></p>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
     
 
     <script>
