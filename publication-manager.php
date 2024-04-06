@@ -64,7 +64,7 @@ class BookPlugin
 
         // Add submenu for listing all books
         // it can be used for future expansion
-        // add_submenu_page('book-plugin', 'All Books', 'All Books', 'manage_options', 'book-list', array($this, 'list_all_books'));
+        add_submenu_page('book-plugin', 'All Books', 'All Books', 'manage_options', 'book-list', array($this, 'list_all_books'));
 
         // Add submenu for adding new book
         add_submenu_page('book-plugin', 'Add New Book', 'Add New Book', 'manage_options', 'add-new-book', array($this, 'add_new_book'));
@@ -84,13 +84,17 @@ class BookPlugin
         // Display a table to list all books
         echo '<h2>All Books</h2>';
         echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th>Title</th><th>Author</th><th>Description</th><th>Actions</th></tr></thead>';
+        echo '<thead><tr><th>Title</th><th>Author</th><th>Description</th><th>About Author</th><th>Audio Book Link</th><th>eBook Link</th><th>PaperBack Link</th><th>Actions</th></tr></thead>';
         echo '<tbody>';
         foreach ($books as $book) {
             echo '<tr>';
             echo '<td>' . $book->title . '</td>';
             echo '<td>' . $book->author . '</td>';
             echo '<td>' . $book->description . '</td>';
+            echo '<td>' . $book->about_author . '</td>';
+            echo '<td>' . $book->audio_link . '</td>';
+            echo '<td>' . $book->ebook_link . '</td>';
+            echo '<td>' . $book->paperback_link . '</td>';
             echo '<td><a href="#" class="edit-book" data-id="' . $book->id . '">Edit</a> | <a href="#" class="delete-book" data-id="' . $book->id . '">Delete</a></td>';
             echo '</tr>';
         }
