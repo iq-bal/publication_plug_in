@@ -15,6 +15,7 @@ class BookPlugin
 {
     public function __construct()
     {
+
         add_action('admin_menu', array($this, 'add_book_menu'));
         add_shortcode('display_books', array($this, 'display_books_shortcode'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
@@ -79,6 +80,14 @@ class BookPlugin
     public function list_all_books()
     {
         global $wpdb;
+
+        if (isset($_POST['delete'])) {
+            $delete_id = intval($_POST['delete']);
+            // Call the method to handle book deletion
+            $this->delete_book($delete_id);
+        }
+
+
         $books = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}books");
 
         // Display a table to list all books
@@ -95,12 +104,38 @@ class BookPlugin
             echo '<td>' . $book->audio_link . '</td>';
             echo '<td>' . $book->ebook_link . '</td>';
             echo '<td>' . $book->paperback_link . '</td>';
-            echo '<td><a href="#" class="edit-book" data-id="' . $book->id . '">Edit</a> | <a href="#" class="delete-book" data-id="' . $book->id . '">Delete</a></td>';
+            
+            echo '<td>';
+            // Form for deletion
+            echo '<form method="post">';
+            echo "<input type='hidden' name='delete' value='{$book->id}'>";
+            echo "<button type='submit'>Delete</button>";
+            echo '</form>';
+
+            
+
+            echo '</td>';
+
+
             echo '</tr>';
         }
         echo '</tbody>';
         echo '</table>';
     }
+
+
+// Function to handle book deletion
+public function delete_book($delete_id)
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'books';
+    $result = $wpdb->delete($table_name, array('id' => $delete_id), array('%d'));
+    if ($result !== false) {
+        echo '<div class="updated"><p>Book deleted successfully!</p></div>';
+    } else {
+        echo '<div class="error"><p>Error deleting book. Please try again.</p></div>';
+    }
+}
 
 
 
