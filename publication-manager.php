@@ -1,9 +1,10 @@
 <?php
 /**
- * Plugin Name: Book Plugin
+ * Plugin Name: Publication Plugin
  * Description: A plugin to manage books in WordPress.
- * Version: 1.0
- * Author: Your Name
+ * Version: 1.0.0
+ * Author: Iqbal Mahamud
+ * Text Domain: Publication Plugin
  */
 
 if (!defined('ABSPATH')) {
@@ -20,6 +21,16 @@ class BookPlugin
         add_action('wp_ajax_display_book_details', array($this, 'display_book_details'));
         add_action('wp_ajax_nopriv_display_book_details', array($this, 'display_book_details'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_bootstrap'));
+
+
+
+
+        // add_action('wp_ajax_get_book_details', array($this, 'get_book_details'));
+        // add_action('wp_ajax_delete_book', array($this, 'delete_book'));
+
+
+
+
 
 
 
@@ -50,11 +61,46 @@ class BookPlugin
     public function add_book_menu()
     {
         add_menu_page('Book', 'Book', 'manage_options', 'book-plugin', array($this, 'book_menu_callback'));
+
+        // Add submenu for listing all books
+        add_submenu_page('book-plugin', 'All Books', 'All Books', 'manage_options', 'book-list', array($this, 'list_all_books'));
+
+        // Add submenu for adding new book
+        add_submenu_page('book-plugin', 'Add New Book', 'Add New Book', 'manage_options', 'add-new-book', array($this, 'add_new_book'));
     }
 
     public function book_menu_callback()
     {
+        echo '<h1>Book Plugin</h1>';
+        echo '<p>Welcome to the Book Plugin dashboard.</p>';
+    }
 
+    public function list_all_books()
+    {
+        global $wpdb;
+        $books = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}books");
+
+        // Display a table to list all books
+        echo '<h2>All Books</h2>';
+        echo '<table class="wp-list-table widefat fixed striped">';
+        echo '<thead><tr><th>Title</th><th>Author</th><th>Description</th><th>Actions</th></tr></thead>';
+        echo '<tbody>';
+        foreach ($books as $book) {
+            echo '<tr>';
+            echo '<td>' . $book->title . '</td>';
+            echo '<td>' . $book->author . '</td>';
+            echo '<td>' . $book->description . '</td>';
+            echo '<td><a href="#" class="edit-book" data-id="' . $book->id . '">Edit</a> | <a href="#" class="delete-book" data-id="' . $book->id . '">Delete</a></td>';
+            echo '</tr>';
+        }
+        echo '</tbody>';
+        echo '</table>';
+    }
+
+
+
+    public function add_new_book()
+    {
         if (isset($_POST['submit'])) {
             // Handle form submission
             $title = sanitize_text_field($_POST['title']);
@@ -123,37 +169,66 @@ class BookPlugin
         <?php
     }
 
+
+
+
+
+
     public function display_books_shortcode()
-{
+    {
     global $wpdb;
     $books = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}books");
 
     ob_start();
     ?>
-    <div class="container">
-        <div class="row">
-            <?php foreach ($books as $book) : ?>
-                <div class="col-md-6">
-                    <div class="card mb-3">
-                        <img class="card-img-top" src="<?php echo $book->image_url; ?>" alt="<?php echo $book->title; ?>">
-                        <div class="card-body">
-                            <h5 class="card-title"><?php echo $book->title; ?></h5>
-                            <p class="card-text"><?php echo $book->author; ?></p>
-                            <button class="btn btn-primary btn-block mt-2 view-details" data-toggle="modal" data-target="#book-modal" data-description="<?php echo $book->description; ?>" data-about-author="<?php echo $book->about_author; ?>">View Details</button>
-                            <div class="buy-options mt-2">
-                                <select class="form-control buy-option" data-ebook="<?php echo $book->ebook_link; ?>" data-audio="<?php echo $book->audio_link; ?>" data-paperback="<?php echo $book->paperback_link; ?>">
-                                    <option value="">Buy</option>
-                                    <option value="ebook">eBook</option>
-                                    <option value="audio">Audio Book</option>
-                                    <option value="paperback">Paperback</option>
-                                </select>
-                            </div>
+
+
+    <style>
+        .card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .card-body {
+            flex: 1;
+        }
+        .card-footer {
+            margin-top: auto; /* Pushes the footer to the bottom */
+        }
+    </style>
+
+<div class="container">
+    <div class="row">
+        <?php foreach ($books as $book) : ?>
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <img class="card-img-top img-fluid" src="<?php echo $book->image_url; ?>" alt="<?php echo $book->title; ?>">
+                    <div class="card-body">
+                        <h5 style="font-weight: 900; color: #34dfd4;" class="card-title"><?php echo $book->title; ?></h5>
+                        <p class="card-text" style="margin:0;padding:0">By <?php echo $book->author; ?></p>
+                        
+                        <p class="card-text" style="max-height: calc(3*4.5em); overflow: hidden; text-overflow: ellipsis; white-space: pre-line; line-height: 1.5em; margin:0;padding:0">
+                             <?php echo mb_strimwidth($book->description, 0, 150, '.....'); ?>
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-primary btn-block view-details" data-toggle="modal" data-target="#book-modal" data-description="<?php echo $book->description; ?>" data-about-author="<?php echo $book->about_author; ?>">More</button>
+                        <div class="buy-options mt-2">
+                            <select class="form-control buy-option" data-ebook="<?php echo $book->ebook_link; ?>" data-audio="<?php echo $book->audio_link; ?>" data-paperback="<?php echo $book->paperback_link; ?>">
+                                <option value="">Buy</option>
+                                <option value="ebook">eBook</option>
+                                <option value="audio">Audio Book</option>
+                                <option value="paperback">Paperback</option>
+                            </select>
                         </div>
                     </div>
                 </div>
-            <?php endforeach; ?>
-        </div>
+            </div>
+        <?php endforeach; ?>
     </div>
+</div>
+
+
 
     <!-- Modal for displaying book details -->
     <div style="display:flex;justify-content:center;align-items:center" >
@@ -168,6 +243,7 @@ class BookPlugin
                     </div>
                     <div class="modal-body">
                         <p class="description"></p>
+                        <hr>
                         <p class="about-author"></p>
                     </div>
                 </div>
