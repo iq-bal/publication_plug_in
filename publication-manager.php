@@ -26,8 +26,7 @@ class BookPlugin
 
 
 
-        // add_action('wp_ajax_get_book_details', array($this, 'get_book_details'));
-        // add_action('wp_ajax_delete_book', array($this, 'delete_book'));
+        
 
 
 
@@ -69,6 +68,9 @@ class BookPlugin
 
         // Add submenu for adding new book
         add_submenu_page('book-plugin', 'Add New Book', 'Add New Book', 'manage_options', 'add-new-book', array($this, 'add_new_book'));
+
+        // Add submenu for editing a book
+        add_submenu_page('book-plugin', 'Edit Book', 'Edit Book', 'manage_options', 'edit-book', array($this, 'edit_book'));
     }
 
     public function book_menu_callback()
@@ -86,8 +88,6 @@ class BookPlugin
             // Call the method to handle book deletion
             $this->delete_book($delete_id);
         }
-
-
         $books = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}books");
 
         // Display a table to list all books
@@ -111,17 +111,78 @@ class BookPlugin
             echo "<input type='hidden' name='delete' value='{$book->id}'>";
             echo "<button type='submit'>Delete</button>";
             echo '</form>';
-
-            
-
             echo '</td>';
-
-
             echo '</tr>';
         }
         echo '</tbody>';
         echo '</table>';
     }
+
+    // fetch book for editing 
+    public function edit_book() {
+        global $wpdb;
+    
+        if (isset($_POST['update_book'])) {
+            $book_id = intval($_POST['update_book']);
+    
+            // Retrieve form data
+            $title = sanitize_text_field($_POST['title'][$book_id]);
+            $author = sanitize_text_field($_POST['author'][$book_id]);
+            $description = sanitize_textarea_field($_POST['description'][$book_id]);
+            $about_author = sanitize_textarea_field($_POST['about_author'][$book_id]);
+            $audio_link = esc_url_raw($_POST['audio_link'][$book_id]);
+            $ebook_link = esc_url_raw($_POST['ebook_link'][$book_id]);
+            $paperback_link = esc_url_raw($_POST['paperback_link'][$book_id]);
+    
+            // Update book in the database
+            $table_name = $wpdb->prefix . 'books';
+            $data = array(
+                'title' => $title,
+                'author' => $author,
+                'description' => $description,
+                'about_author' => $about_author,
+                'audio_link' => $audio_link,
+                'ebook_link' => $ebook_link,
+                'paperback_link' => $paperback_link
+            );
+            $where = array('id' => $book_id);
+            $updated = $wpdb->update($table_name, $data, $where);
+    
+            // Check if update was successful
+            if ($updated !== false) {
+                echo '<div class="updated"><p>Book updated successfully!</p></div>';
+            } else {
+                echo '<div class="error"><p>Error updating book. Please try again.</p></div>';
+            }
+        }
+    
+        $books = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}books");
+    
+        // Display a table to list all books
+        echo '<h2>All Books</h2>';
+        echo '<form method="post">';
+        echo '<table class="wp-list-table widefat fixed striped">';
+        echo '<thead><tr><th>Title</th><th>Author</th><th>Description</th><th>About Author</th><th>Audio Book Link</th><th>eBook Link</th><th>PaperBack Link</th><th>Actions</th></tr></thead>';
+        echo '<tbody>';
+        foreach ($books as $book) {
+            echo '<tr>';
+            echo '<td><textarea name="title[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->title) . '</textarea></td>';
+            echo '<td><textarea name="author[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->author) . '</textarea></td>';
+            echo '<td><textarea name="description[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->description) . '</textarea></td>';
+            echo '<td><textarea name="about_author[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->about_author) . '</textarea></td>';
+            echo '<td><textarea name="audio_link[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->audio_link) . '</textarea></td>';
+            echo '<td><textarea name="ebook_link[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->ebook_link) . '</textarea></td>';
+            echo '<td><textarea name="paperback_link[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->paperback_link) . '</textarea></td>';
+            echo '<td><button type="submit" name="update_book" value="' . $book->id . '">Edit</button></td>';
+            echo '</tr>';
+        }
+        echo '</tbody>';
+        echo '</table>';
+        echo '</form>';
+    }
+    
+    
+    
 
 
 // Function to handle book deletion
