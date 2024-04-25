@@ -58,6 +58,8 @@ class BookPlugin
 
     }
 
+    
+
     public function add_book_menu()
     {
         add_menu_page('Book', 'Book', 'manage_options', 'book-plugin', array($this, 'book_menu_callback'));
@@ -287,8 +289,8 @@ public function delete_book($delete_id)
         <?php foreach ($books as $book) : ?>
             <div class="grid-item">
                 <img src="<?php echo $book->image_url; ?>" alt="Book Cover" />
-                <h3><?php echo $book->title; ?></h3>
-                <p><span>By <?php echo $book->author; ?></span> </p>
+                <h3 style="font-size:25px; font-weight:bold; margin-bottom:10px; color:#333"><?php echo $book->title; ?></h3>
+                <p><span style="font-size:20px; font-style:italic; color:#666" >By <?php echo $book->author; ?></span> </p>
                 <p class="description">
                     <?php echo $book->description; ?>
                 </p>
@@ -354,24 +356,7 @@ document.querySelectorAll(".more-btn").forEach(function(btn, index) {
 
 
 
-    //   document.querySelectorAll(".more-btn").forEach(function (btn) {
-    //     btn.addEventListener("click", function () {
-    //       var modal = document.getElementById("myModal");
-    //       var span = modal.querySelector(".close");
-
-    //       modal.style.display = "block";
-
-    //       span.onclick = function () {
-    //         modal.style.display = "none";
-    //       };
-
-    //       window.onclick = function (event) {
-    //         if (event.target == modal) {
-    //           modal.style.display = "none";
-    //         }
-    //       };
-    //     });
-    //   });
+    
 
       // Truncate description with ellipsis
       var descriptionElements = document.querySelectorAll(".description");

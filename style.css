@@ -79,18 +79,21 @@ body {
   position: relative;
 }
 
-.grid-item h3 {
-    font-size: 25px; /* Adjust the font size as needed */
+ /* .grid-item h3 {
+    font-size: 25px; 
+    
     font-weight: bold;
-    color: #333; /* Set the color to your preference */
-    margin-bottom: 10px; /* Add some bottom margin for spacing */
-  }
+    color: #333; 
+    
+    margin-bottom: 10px; 
+    
+  }  */
 
-  .grid-item p span {
+  /* .grid-item p span {
     font-size: 20px;
-    font-style: italic; /* Make the author name italic */
-    color: #666; /* Set the color to a subtle tone */
-  }
+    font-style: italic; 
+    color: #666;
+  } */
   
 
 /* .modal {
