@@ -58,6 +58,15 @@ class BookPlugin
 
     }
 
+
+    public function remove_backslashes_from_db_string($string) {
+        // Check if magic quotes is enabled
+        if (get_magic_quotes_gpc()) {
+            // If magic quotes is enabled, remove slashes
+            $string = stripslashes($string);
+        }
+        return $string;
+    }
     
 
     public function add_book_menu()
@@ -286,6 +295,7 @@ public function delete_book($delete_id)
     ?>
 
 <div class="grid-container">
+    
         <?php foreach ($books as $book) : ?>
             <div class="grid-item">
                 <img src="<?php echo $book->image_url; ?>" alt="Book Cover" />
@@ -294,7 +304,6 @@ public function delete_book($delete_id)
                 <p class="description">
                     <?php echo $book->description; ?>
                 </p>
-            
                     <button class="more-btn">More</button>
                     <div class="dropdown">
                     <button class="buy-btn">Buy</button>
@@ -304,7 +313,6 @@ public function delete_book($delete_id)
                         <a href="<?php echo $book->paperback_link; ?>">Paper Back</a>
                     </div>
                     </div>
-                
             </div>
         <?php endforeach; ?>
       <!-- Add more grid items as needed -->
@@ -314,12 +322,15 @@ public function delete_book($delete_id)
       <div class="modal-content">
         <span class="close">&times;</span>
         <h2><?php echo $book->title; ?></h2>
-        <span class="about-author">About Author</span>
-        <p class="about-author-text" ><?php echo $book->about_author; ?></p>
+
         <span class="about-book" >Description</span>
         <p class="full-description">
         <?php echo $book->description; ?>
         </p>
+
+        <span class="about-author">About Author</span>
+        <p class="about-author-text" ><?php echo $book->about_author; ?></p>
+        
       </div>
 </div>
 
