@@ -24,17 +24,6 @@ class BookPlugin
         add_action('wp_enqueue_scripts', array($this, 'enqueue_bootstrap'));
 
 
-
-
-        
-
-
-
-
-
-
-
-
         global $wpdb;
         $table_name = $wpdb->prefix . 'books';
         $charset_collate = $wpdb->get_charset_collate();
@@ -55,6 +44,11 @@ class BookPlugin
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql);
 
+     // Check if 'publishing_year' column exists, and add it if it doesn't
+    $column = $wpdb->get_results("SHOW COLUMNS FROM $table_name LIKE 'publishing_year'");
+    if (empty($column)) {
+        $wpdb->query("ALTER TABLE $table_name ADD publishing_year YEAR");
+    }
 
     }
 
@@ -104,7 +98,7 @@ class BookPlugin
         // Display a table to list all books
         echo '<h2>All Books</h2>';
         echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th>Title</th><th>Author</th><th>Description</th><th>About Author</th><th>Audio Book Link</th><th>eBook Link</th><th>PaperBack Link</th><th>Actions</th></tr></thead>';
+        echo '<thead><tr><th>Title</th><th>Author</th><th>Description</th><th>About Author</th><th>Audio Book Link</th><th>eBook Link</th><th>PaperBack Link</th><th>Publishing Year</th></tr></thead>';
         echo '<tbody>';
         foreach ($books as $book) {
             echo '<tr>';
@@ -115,6 +109,7 @@ class BookPlugin
             echo '<td>' . $book->audio_link . '</td>';
             echo '<td>' . $book->ebook_link . '</td>';
             echo '<td>' . $book->paperback_link . '</td>';
+            echo '<td>' . $book->publishing_year . '</td>';
             
             echo '<td>';
             // Form for deletion
@@ -130,67 +125,71 @@ class BookPlugin
     }
 
     // fetch book for editing 
-    public function edit_book() {
-        global $wpdb;
-    
-        if (isset($_POST['update_book'])) {
-            $book_id = intval($_POST['update_book']);
-    
-            // Retrieve form data
-            $title = sanitize_text_field($_POST['title'][$book_id]);
-            $author = sanitize_text_field($_POST['author'][$book_id]);
-            $description = sanitize_textarea_field($_POST['description'][$book_id]);
-            $about_author = sanitize_textarea_field($_POST['about_author'][$book_id]);
-            $audio_link = esc_url_raw($_POST['audio_link'][$book_id]);
-            $ebook_link = esc_url_raw($_POST['ebook_link'][$book_id]);
-            $paperback_link = esc_url_raw($_POST['paperback_link'][$book_id]);
-    
-            // Update book in the database
-            $table_name = $wpdb->prefix . 'books';
-            $data = array(
-                'title' => $title,
-                'author' => $author,
-                'description' => $description,
-                'about_author' => $about_author,
-                'audio_link' => $audio_link,
-                'ebook_link' => $ebook_link,
-                'paperback_link' => $paperback_link
-            );
-            $where = array('id' => $book_id);
-            $updated = $wpdb->update($table_name, $data, $where);
-    
-            // Check if update was successful
-            if ($updated !== false) {
-                echo '<div class="updated"><p>Book updated successfully!</p></div>';
-            } else {
-                echo '<div class="error"><p>Error updating book. Please try again.</p></div>';
-            }
+   public function edit_book() {
+    global $wpdb;
+
+    if (isset($_POST['update_book'])) {
+        $book_id = intval($_POST['update_book']);
+
+        // Retrieve form data
+        $title = sanitize_text_field($_POST['title'][$book_id]);
+        $author = sanitize_text_field($_POST['author'][$book_id]);
+        $description = sanitize_textarea_field($_POST['description'][$book_id]);
+        $about_author = sanitize_textarea_field($_POST['about_author'][$book_id]);
+        $audio_link = esc_url_raw($_POST['audio_link'][$book_id]);
+        $ebook_link = esc_url_raw($_POST['ebook_link'][$book_id]);
+        $paperback_link = esc_url_raw($_POST['paperback_link'][$book_id]);
+        $publishing_year = intval($_POST['publishing_year'][$book_id]); // Use intval() for sanitizing numeric value
+
+        // Update book in the database
+        $table_name = $wpdb->prefix . 'books';
+        $data = array(
+            'title' => $title,
+            'author' => $author,
+            'description' => $description,
+            'about_author' => $about_author,
+            'audio_link' => $audio_link,
+            'ebook_link' => $ebook_link,
+            'paperback_link' => $paperback_link,
+            'publishing_year' => $publishing_year
+        );
+        $where = array('id' => $book_id);
+        $updated = $wpdb->update($table_name, $data, $where);
+
+        // Check if update was successful
+        if ($updated !== false) {
+            echo '<div class="updated"><p>Book updated successfully!</p></div>';
+        } else {
+            echo '<div class="error"><p>Error updating book. Please try again.</p></div>';
         }
-    
-        $books = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}books");
-    
-        // Display a table to list all books
-        echo '<h2>All Books</h2>';
-        echo '<form method="post">';
-        echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th>Title</th><th>Author</th><th>Description</th><th>About Author</th><th>Audio Book Link</th><th>eBook Link</th><th>PaperBack Link</th><th>Actions</th></tr></thead>';
-        echo '<tbody>';
-        foreach ($books as $book) {
-            echo '<tr>';
-            echo '<td><textarea name="title[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->title) . '</textarea></td>';
-            echo '<td><textarea name="author[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->author) . '</textarea></td>';
-            echo '<td><textarea name="description[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->description) . '</textarea></td>';
-            echo '<td><textarea name="about_author[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->about_author) . '</textarea></td>';
-            echo '<td><textarea name="audio_link[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->audio_link) . '</textarea></td>';
-            echo '<td><textarea name="ebook_link[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->ebook_link) . '</textarea></td>';
-            echo '<td><textarea name="paperback_link[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->paperback_link) . '</textarea></td>';
-            echo '<td><button type="submit" name="update_book" value="' . $book->id . '">Edit</button></td>';
-            echo '</tr>';
-        }
-        echo '</tbody>';
-        echo '</table>';
-        echo '</form>';
     }
+
+    $books = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}books");
+
+    // Display a table to list all books
+    echo '<h2>All Books</h2>';
+    echo '<form method="post">';
+    echo '<table class="wp-list-table widefat fixed striped">';
+    echo '<thead><tr><th>Title</th><th>Author</th><th>Description</th><th>About Author</th><th>Audio Book Link</th><th>eBook Link</th><th>PaperBack Link</th><th>Publishing Year</th><th>Edit</th></tr></thead>';
+    echo '<tbody>';
+    foreach ($books as $book) {
+        echo '<tr>';
+        echo '<td><textarea name="title[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->title) . '</textarea></td>';
+        echo '<td><textarea name="author[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->author) . '</textarea></td>';
+        echo '<td><textarea name="description[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->description) . '</textarea></td>';
+        echo '<td><textarea name="about_author[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->about_author) . '</textarea></td>';
+        echo '<td><textarea name="audio_link[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->audio_link) . '</textarea></td>';
+        echo '<td><textarea name="ebook_link[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->ebook_link) . '</textarea></td>';
+        echo '<td><textarea name="paperback_link[' . $book->id . ']" style="width: 100%">' . esc_textarea($book->paperback_link) . '</textarea></td>';
+        echo '<td><input type="number" name="publishing_year[' . $book->id . ']" style="width: 100%" value="' . esc_attr($book->publishing_year) . '"></td>'; // Use input type number for publishing year
+        echo '<td><button type="submit" name="update_book" value="' . $book->id . '">Edit</button></td>';
+        echo '</tr>';
+    }
+    echo '</tbody>';
+    echo '</table>';
+    echo '</form>';
+}
+
     
     
     
@@ -212,74 +211,80 @@ public function delete_book($delete_id)
 
 
     public function add_new_book()
-    {
-        if (isset($_POST['submit'])) {
-            // Handle form submission
-            $title = sanitize_text_field($_POST['title']);
-            $author = sanitize_text_field($_POST['author']);
-            $description = sanitize_text_field($_POST['description']);
-            $about_author = sanitize_text_field($_POST['about_author']);
-            $audio_link = esc_url_raw($_POST['audio_link']);
-            $ebook_link = esc_url_raw($_POST['ebook_link']);
-            $paperback_link = esc_url_raw($_POST['paperback_link']);
-            
-            // Handle file upload
-            $image_url = '';
-            if (!empty($_FILES['image']['name'])) {
-                $uploaded_image = wp_handle_upload($_FILES['image'], array('test_form' => false));
-                if (!isset($uploaded_image['error'])) {
-                    $image_url = $uploaded_image['url'];
-                }
-            }
-            
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'books';
-            $insert_data = array(
-                'title' => $title,
-                'author' => $author,
-                'description' => $description,
-                'about_author' => $about_author,
-                'audio_link' => $audio_link,
-                'ebook_link' => $ebook_link,
-                'paperback_link' => $paperback_link,
-                'image_url' => $image_url
-            );
-            $insert_format = array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');
-            $insert_result = $wpdb->insert($table_name, $insert_data, $insert_format);
-            
-            if ($insert_result) {
-                echo '<div class="updated"><p>Book added successfully!</p></div>';
-            } else {
-                echo '<div class="error"><p>Error adding book. Please try again.</p></div>';
+{
+    if (isset($_POST['submit'])) {
+        // Handle form submission
+        $title = sanitize_text_field($_POST['title']);
+        $author = sanitize_text_field($_POST['author']);
+        $description = sanitize_text_field($_POST['description']);
+        $about_author = sanitize_text_field($_POST['about_author']);
+        $audio_link = esc_url_raw($_POST['audio_link']);
+        $ebook_link = esc_url_raw($_POST['ebook_link']);
+        $paperback_link = esc_url_raw($_POST['paperback_link']);
+        $publishing_year = intval($_POST['publishing_year']); // Use intval() for sanitizing numeric value
+
+        // Handle file upload
+        $image_url = '';
+        if (!empty($_FILES['image']['name'])) {
+            $uploaded_image = wp_handle_upload($_FILES['image'], array('test_form' => false));
+            if (!isset($uploaded_image['error'])) {
+                $image_url = $uploaded_image['url'];
             }
         }
 
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'books';
+        $insert_data = array(
+            'title' => $title,
+            'author' => $author,
+            'description' => $description,
+            'about_author' => $about_author,
+            'audio_link' => $audio_link,
+            'ebook_link' => $ebook_link,
+            'paperback_link' => $paperback_link,
+            'image_url' => $image_url,
+            'publishing_year' => $publishing_year
+        );
+        $insert_format = array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d');
+        $insert_result = $wpdb->insert($table_name, $insert_data, $insert_format);
 
-        ?>
-        <div class="wrap">
-            <h2>Add New Book</h2>
-            <form id="book-form" method="post" enctype="multipart/form-data">
-                <label for="title">Title:</label><br>
-                <input type="text" id="title" name="title"><br>
-                <label for="author">Author:</label><br>
-                <input type="text" id="author" name="author"><br>
-                <label for="description">Description:</label><br>
-                <input type="text" id="description" name="description"><br>
-                <label for="about_author">About Author:</label><br>
-                <input type="text" id="about_author" name="about_author"><br>
-                <label for="audio_link">Audio Book Link:</label><br>
-                <input type="text" id="audio_link" name="audio_link"><br>
-                <label for="ebook_link">eBook Link:</label><br>
-                <input type="text" id="ebook_link" name="ebook_link"><br>
-                <label for="paperback_link">Paperback Link:</label><br>
-                <input type="text" id="paperback_link" name="paperback_link"><br>
-                <label for="image">Image:</label><br>
-                <input type="file" id="image" name="image"><br><br>
-                <input type="submit" name="submit" value="Submit">
-            </form>
-        </div>
-        <?php
+        if ($insert_result) {
+            echo '<div class="updated"><p>Book added successfully!</p></div>';
+        } else {
+            echo '<div class="error"><p>Error adding book. Please try again.</p></div>';
+        }
     }
+
+    ?>
+    <div class="wrap">
+        <h2>Add New Book</h2>
+        <form id="book-form" method="post" enctype="multipart/form-data">
+            <label for="title">Title:</label><br>
+            <input type="text" id="title" name="title"><br>
+            <label for="author">Author:</label><br>
+            <input type="text" id="author" name="author"><br>
+            <label for="description">Description:</label><br>
+            <input type="text" id="description" name="description"><br>
+            <label for="about_author">About Author:</label><br>
+            <input type="text" id="about_author" name="about_author"><br>
+            <label for="audio_link">Audio Book Link:</label><br>
+            <input type="text" id="audio_link" name="audio_link"><br>
+            <label for="ebook_link">eBook Link:</label><br>
+            <input type="text" id="ebook_link" name="ebook_link"><br>
+            <label for="paperback_link">Paperback Link:</label><br>
+            <input type="text" id="paperback_link" name="paperback_link"><br>
+
+            <label for="publishing_year">Publishing Year:</label><br>
+            <input type="number" id="publishing_year" name="publishing_year"><br>
+
+            <label for="image">Image:</label><br>
+            <input type="file" id="image" name="image"><br><br>
+            <input type="submit" name="submit" value="Submit">
+        </form>
+    </div>
+    <?php
+}
+
 
 
 
