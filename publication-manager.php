@@ -291,100 +291,109 @@ public function delete_book($delete_id)
 
 
 
-    public function display_books_shortcode()
-    {
+    public function display_books_shortcode(){
     global $wpdb;
-    $books = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}books");
+    $table_name = $wpdb->prefix . 'books';
+
+    // Pagination settings
+    $current_page = isset($_GET['paged']) ? absint($_GET['paged']) : 1;
+    $posts_per_page = 5;
+    $offset = ($current_page - 1) * $posts_per_page;
+
+    $total_books = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
+    $total_pages = ceil($total_books / $posts_per_page);
+
+    $books = $wpdb->get_results("SELECT * FROM $table_name LIMIT $offset, $posts_per_page");
 
     ob_start();
     ?>
 
-<div class="grid-container">
-    
+    <div class="grid-container">
         <?php foreach ($books as $book) : ?>
             <div class="grid-item">
-                <img src="<?php echo $book->image_url; ?>" alt="Book Cover" />
-                <h3 style="font-size:25px; font-weight:bold; margin-bottom:10px; color:#333"><?php echo $book->title; ?></h3>
-                <p><span style="font-size:20px; font-style:italic; color:#666" >By <?php echo $book->author; ?></span> </p>
+                <img src="<?php echo esc_url($book->image_url); ?>" alt="Book Cover" />
+                <h3 style="font-size:25px; font-weight:bold; margin-bottom:10px; color:#333"><?php echo esc_html($book->title); ?></h3>
+                <p><span style="font-size:20px; font-style:italic; color:#666">By <?php echo esc_html($book->author); ?></span></p>
                 <p class="description">
-                    <?php echo $book->description; ?>
+                    <?php echo esc_html($book->description); ?>
                 </p>
-                    <button class="more-btn">More</button>
-                    <div class="dropdown">
+                <button class="more-btn">More</button>
+                <div class="dropdown">
                     <button class="buy-btn">Buy</button>
                     <div class="dropdown-content">
-                        <a href="<?php echo $book->ebook_link; ?>">eBook</a>
-                        <a href="<?php echo $book->audio_link; ?>">AudioBook</a>
-                        <a href="<?php echo $book->paperback_link; ?>">Paper Back</a>
+                        <a href="<?php echo esc_url($book->ebook_link); ?>">eBook</a>
+                        <a href="<?php echo esc_url($book->audio_link); ?>">AudioBook</a>
+                        <a href="<?php echo esc_url($book->paperback_link); ?>">Paper Back</a>
                     </div>
-                    </div>
+                </div>
             </div>
         <?php endforeach; ?>
-      <!-- Add more grid items as needed -->
-</div>
+    </div>
 
-<div id="myModal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2><?php echo $book->title; ?></h2>
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><?php echo esc_html($book->title); ?></h2>
 
-        <span class="about-book" >Description</span>
-        <p class="full-description">
-        <?php echo $book->description; ?>
-        </p>
+            <span class="about-book">Description</span>
+            <p class="full-description">
+                <?php echo esc_html($book->description); ?>
+            </p>
 
-        <span class="about-author">About Author</span>
-        <p class="about-author-text" ><?php echo $book->about_author; ?></p>
-        
-      </div>
-</div>
+            <span class="about-author">About Author</span>
+            <p class="about-author-text"><?php echo esc_html($book->about_author); ?></p>
+        </div>
+    </div>
+
+    <div class="pagination">
+        <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
+            <a href="?paged=<?php echo $i; ?>" <?php echo ($i === $current_page) ? 'class="active"' : ''; ?>>
+                <?php echo $i; ?>
+            </a>
+        <?php endfor; ?>
+    </div>
 
     <script>
+        document.querySelectorAll(".more-btn").forEach(function(btn, index) {
+            btn.addEventListener("click", function() {
+                var modal = document.getElementById("myModal");
+                var span = modal.querySelector(".close");
 
-document.querySelectorAll(".more-btn").forEach(function(btn, index) {
-    btn.addEventListener("click", function() {
-        var modal = document.getElementById("myModal");
-        var span = modal.querySelector(".close");
+                // Get book details associated with the clicked button
+                var book = <?php echo json_encode($books); ?>[index];
 
-        // Get book details associated with the clicked button
-        var book = <?php echo json_encode($books); ?>[index];
+                // Populate modal content with book details
+                modal.querySelector("h2").textContent = book.title;
+                modal.querySelector("p").textContent = book.about_author;
+                modal.querySelector(".full-description").textContent = book.description;
 
-        // Populate modal content with book details
-        modal.querySelector("h2").textContent = book.title;
-        modal.querySelector("p").textContent = book.about_author;
-        modal.querySelector(".full-description").textContent = book.description;
+                modal.style.display = "block";
 
-        modal.style.display = "block";
+                span.onclick = function() {
+                    modal.style.display = "none";
+                };
 
-        span.onclick = function() {
-            modal.style.display = "none";
-        };
+                window.onclick = function(event) {
+                    if (event.target == modal) {
+                        modal.style.display = "none";
+                    }
+                };
+            });
+        });
 
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        };
-    });
-});
-
-
-
-
-
-    
-
-      // Truncate description with ellipsis
-      var descriptionElements = document.querySelectorAll(".description");
-      descriptionElements.forEach(function (element) {
-        var truncatedText =
-          element.textContent.trim().substring(0, 100).trim() + "...";
-        element.textContent = truncatedText;
-      });
+        // Truncate description with ellipsis
+        var descriptionElements = document.querySelectorAll(".description");
+        descriptionElements.forEach(function (element) {
+            var truncatedText =
+                element.textContent.trim().substring(0, 100).trim() + "...";
+            element.textContent = truncatedText;
+        });
     </script>
+
     <?php
     return ob_get_clean();
 }
+
 
 
     public function enqueue_scripts()
